@@ -79,10 +79,10 @@ const Dashboard = ({ isMinimized }) => {
             .get("/transactions/all")
             .catch((err) => ({ error: err, endpoint: "/transactions/all" })),
           api
-            .get("/transactions-overview")
+            .get("/transactions/overview")
             .catch((err) => ({
               error: err,
-              endpoint: "/transactions-overview",
+              endpoint: "/transactions/overview",
             })),
           api
             .get("/transactions/recent")
