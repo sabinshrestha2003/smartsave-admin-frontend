@@ -41,7 +41,16 @@ const BillSplitting = ({ isMinimized }) => {
       const response = await api.get('/admin/groups', {
         headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
       });
-      const groupData = response.data.groups || [];
+      const groupData = (response.data.groups || []).map(group => ({
+        ...group,
+        id: group.id ?? 'Unknown',
+        name: group.name ?? 'Unnamed Group',
+        creator_id: group.creator_id ?? 'Unknown',
+        creator_name: group.creator_name ?? 'Unknown',
+        member_count: group.member_count ?? 0,
+        currency: group.currency ?? 'USD',
+        created_at: group.created_at ?? new Date().toISOString(),
+      }));
       setGroups(groupData);
       setFilteredGroups(groupData);
     } catch (err) {
@@ -54,11 +63,15 @@ const BillSplitting = ({ isMinimized }) => {
   useEffect(() => {
     let filtered = [...groups];
     if (searchQuery) {
-      filtered = filtered.filter(
-        group =>
-          group.id.toString().includes(searchQuery) ||
-          group.name.toLowerCase().includes(searchQuery.toLowerCase())
-      );
+      filtered = filtered.filter(group => {
+        if (!group.name) {
+          console.warn('Group with null name:', group);
+        }
+        return (
+          group.id?.toString().includes(searchQuery) ||
+          (group.name ?? '').toLowerCase().includes(searchQuery.toLowerCase())
+        );
+      });
     }
     setFilteredGroups(filtered);
   }, [searchQuery, groups]);

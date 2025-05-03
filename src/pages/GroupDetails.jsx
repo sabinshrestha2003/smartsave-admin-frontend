@@ -43,10 +43,24 @@ export default function GroupDetails() {
         const response = await api.get(`/admin/groups/${id}`, {
           headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
         });
-        const groupData = response.data.group;
+        const groupData = {
+          ...response.data.group,
+          id: response.data.group.id ?? 'Unknown',
+          name: response.data.group.name ?? 'Unnamed Group',
+          creator_id: response.data.group.creator_id ?? 'Unknown',
+          creator_name: response.data.group.creator_name ?? 'Unknown',
+          currency: response.data.group.currency ?? 'USD',
+          type: response.data.group.type ?? 'Unknown',
+          created_at: response.data.group.created_at ?? new Date().toISOString(),
+          members: response.data.group.members ?? [],
+          bill_splits: response.data.group.bill_splits ?? [],
+        };
+        if (!groupData.name) {
+          console.warn('Group with null name:', groupData);
+        }
         setGroup(groupData);
 
-        const billSplits = groupData.bill_splits || [];
+        const billSplits = groupData.bill_splits;
         setTotalBillSplits(billSplits.length);
         const flaggedCount = billSplits.filter(split => split.flagged).length;
         setFlaggedBillSplits(flaggedCount);
@@ -70,7 +84,8 @@ export default function GroupDetails() {
       { bg: '#FFF1F2', text: '#F43F5E' },
       { bg: '#F3E8FF', text: '#A855F7' },
     ];
-    const charCode = name ? name.charCodeAt(0) : 0;
+    const safeName = name ?? 'Unnamed';
+    const charCode = safeName.charCodeAt(0);
     return colorOptions[charCode % colorOptions.length];
   };
 

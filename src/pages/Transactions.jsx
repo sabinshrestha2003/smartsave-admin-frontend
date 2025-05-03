@@ -1,5 +1,5 @@
-import {useEffect, useState} from 'react';
-import {useNavigate} from 'react-router-dom';
+import { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import {
   Box,
   Typography,
@@ -37,7 +37,7 @@ import {
 import api from '../utils/api';
 import colors from '../styles/colors';
 
-const Transactions = ({isMinimized}) => {
+const Transactions = ({ isMinimized }) => {
   const [transactions, setTransactions] = useState([]);
   const [filteredTransactions, setFilteredTransactions] = useState([]);
   const [searchQuery, setSearchQuery] = useState('');
@@ -56,9 +56,16 @@ const Transactions = ({isMinimized}) => {
     setLoading(true);
     try {
       const response = await api.get('/transactions/all', {
-        headers: {Authorization: `Bearer ${localStorage.getItem('token')}`},
+        headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
       });
-      const transactionData = response.data || [];
+      const transactionData = (response.data || []).map(txn => ({
+        ...txn,
+        user_id: txn.user_id ?? 'Unknown',
+        category: txn.category ?? 'Uncategorized',
+        flagged: txn.flagged ?? false,
+        date: txn.date ?? new Date().toISOString(),
+        amount: txn.amount ?? 0,
+      }));
       setTransactions(transactionData);
       setFilteredTransactions(transactionData);
     } catch (err) {
@@ -71,11 +78,15 @@ const Transactions = ({isMinimized}) => {
   useEffect(() => {
     let filtered = [...transactions];
     if (searchQuery) {
-      filtered = filtered.filter(
-        txn =>
-          txn.user_id.toString().includes(searchQuery) ||
-          txn.category?.toLowerCase().includes(searchQuery.toLowerCase()),
-      );
+      filtered = filtered.filter(txn => {
+        if (!txn.category) {
+          console.warn('Transaction with null category:', txn);
+        }
+        return (
+          txn.user_id?.toString().includes(searchQuery) ||
+          (txn.category ?? '').toLowerCase().includes(searchQuery.toLowerCase())
+        );
+      });
     }
     if (statusFilter !== 'all') {
       filtered = filtered.filter(txn =>
@@ -87,13 +98,13 @@ const Transactions = ({isMinimized}) => {
 
   const handleToggleFlag = async (txnId, currentStatus) => {
     try {
-      const updatedTransaction = {flagged: !currentStatus};
+      const updatedTransaction = { flagged: !currentStatus };
       await api.patch(`/transactions/${txnId}/flag`, updatedTransaction, {
-        headers: {Authorization: `Bearer ${localStorage.getItem('token')}`},
+        headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
       });
       setTransactions(
         transactions.map(txn =>
-          txn.id === txnId ? {...txn, flagged: !currentStatus} : txn,
+          txn.id === txnId ? { ...txn, flagged: !currentStatus } : txn,
         ),
       );
     } catch (err) {
@@ -114,10 +125,10 @@ const Transactions = ({isMinimized}) => {
   const getTransactionTypeIcon = (type, amount) => {
     if (type === 'expense' || amount < 0) {
       return (
-        <ArrowDownward sx={{color: colors.expense, fontSize: '1.25rem'}} />
+        <ArrowDownward sx={{ color: colors.expense, fontSize: '1.25rem' }} />
       );
     } else {
-      return <ArrowUpward sx={{color: colors.income, fontSize: '1.25rem'}} />;
+      return <ArrowUpward sx={{ color: colors.income, fontSize: '1.25rem' }} />;
     }
   };
 
@@ -133,7 +144,7 @@ const Transactions = ({isMinimized}) => {
           top: '50%',
           left: '50%',
           transform: 'translate(-50%, -50%)',
-          width: {xs: '90%', sm: 500},
+          width: { xs: '90%', sm: 500 },
           bgcolor: colors.text,
           borderRadius: '16px',
           boxShadow: `0 8px 32px rgba(0, 0, 0, 0.5)`,
@@ -503,7 +514,7 @@ const Transactions = ({isMinimized}) => {
             </Grid>
 
             {selectedTransaction.description && (
-              <Box sx={{mt: 2}}>
+              <Box sx={{ mt: 2 }}>
                 <Typography
                   variant="body2"
                   sx={{
@@ -528,7 +539,7 @@ const Transactions = ({isMinimized}) => {
             )}
 
             <Box
-              sx={{display: 'flex', justifyContent: 'flex-end', mt: 4, gap: 2}}>
+              sx={{ display: 'flex', justifyContent: 'flex-end', mt: 4, gap: 2 }}>
               <Button
                 onClick={closeModal}
                 variant="outlined"
@@ -593,8 +604,8 @@ const Transactions = ({isMinimized}) => {
           gap: 2,
           backgroundColor: colors.background,
         }}>
-        <CircularProgress size={40} sx={{color: colors.primary}} />
-        <Typography variant="h6" sx={{color: colors.text}}>
+        <CircularProgress size={40} sx={{ color: colors.primary }} />
+        <Typography variant="h6" sx={{ color: colors.text }}>
           Loading transactions...
         </Typography>
       </Box>
@@ -602,14 +613,14 @@ const Transactions = ({isMinimized}) => {
   }
 
   return (
-    <Box sx={{p: 3, backgroundColor: colors.background, minHeight: '100vh'}}>
-      <Box sx={{mb: 3}}>
+    <Box sx={{ p: 3, backgroundColor: colors.background, minHeight: '100vh' }}>
+      <Box sx={{ mb: 3 }}>
         <Typography
           variant="h5"
-          sx={{fontWeight: 700, color: colors.text, mb: 0.5}}>
+          sx={{ fontWeight: 700, color: colors.text, mb: 0.5 }}>
           Transaction Management
         </Typography>
-        <Typography variant="body2" sx={{color: colors.textSecondary}}>
+        <Typography variant="body2" sx={{ color: colors.textSecondary }}>
           Monitor and control financial transactions
         </Typography>
       </Box>
@@ -622,13 +633,13 @@ const Transactions = ({isMinimized}) => {
           border: `1px solid ${colors.border}`,
           overflow: 'hidden',
         }}>
-        <CardContent sx={{p: 0}}>
+        <CardContent sx={{ p: 0 }}>
           <Box
             sx={{
               display: 'flex',
-              flexDirection: {xs: 'column', sm: 'row'},
+              flexDirection: { xs: 'column', sm: 'row' },
               justifyContent: 'space-between',
-              alignItems: {xs: 'flex-start', sm: 'center'},
+              alignItems: { xs: 'flex-start', sm: 'center' },
               gap: 2,
               p: 3,
               borderBottom: `1px solid ${colors.border}`,
@@ -637,8 +648,8 @@ const Transactions = ({isMinimized}) => {
               sx={{
                 position: 'relative',
                 flex: 1,
-                maxWidth: {xs: '100%', sm: '320px'},
-                width: {xs: '100%', sm: 'auto'},
+                maxWidth: { xs: '100%', sm: '320px' },
+                width: { xs: '100%', sm: 'auto' },
               }}>
               <TextField
                 placeholder="Search transactions..."
@@ -651,7 +662,7 @@ const Transactions = ({isMinimized}) => {
                   startAdornment: (
                     <InputAdornment position="start">
                       <Search
-                        sx={{color: colors.textSecondary, fontSize: '1.25rem'}}
+                        sx={{ color: colors.textSecondary, fontSize: '1.25rem' }}
                       />
                     </InputAdornment>
                   ),
@@ -666,9 +677,9 @@ const Transactions = ({isMinimized}) => {
                 }}
                 sx={{
                   '& .MuiOutlinedInput-root': {
-                    '& fieldset': {borderColor: colors.border},
-                    '&:hover fieldset': {borderColor: colors.primary},
-                    '&.Mui-focused fieldset': {borderColor: colors.primary},
+                    '& fieldset': { borderColor: colors.border },
+                    '&:hover fieldset': { borderColor: colors.primary },
+                    '&.Mui-focused fieldset': { borderColor: colors.primary },
                   },
                 }}
               />
@@ -708,10 +719,10 @@ const Transactions = ({isMinimized}) => {
             </Paper>
           </Box>
 
-          <Box sx={{overflowX: 'auto'}}>
+          <Box sx={{ overflowX: 'auto' }}>
             <Table>
               <TableHead>
-                <TableRow sx={{backgroundColor: colors.background}}>
+                <TableRow sx={{ backgroundColor: colors.background }}>
                   <TableCell
                     sx={{
                       color: colors.textSecondary,
@@ -820,7 +831,7 @@ const Transactions = ({isMinimized}) => {
                           borderBottom: `1px solid ${colors.border}`,
                         }}>
                         <Box
-                          sx={{display: 'flex', alignItems: 'center', gap: 1}}>
+                          sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                           <Box>
                             <Typography
                               variant="body2"
@@ -934,7 +945,7 @@ const Transactions = ({isMinimized}) => {
                         <Button
                           variant="outlined"
                           size="small"
-                          startIcon={<Visibility sx={{fontSize: '1rem'}} />}
+                          startIcon={<Visibility sx={{ fontSize: '1rem' }} />}
                           onClick={() => handleViewDetails(txn)}
                           sx={{
                             fontSize: '0.8rem',

@@ -37,7 +37,8 @@ const getRandomColor = (name) => {
     { bg: colors.background, text: colors.textSecondary }, 
   ]
 
-  const charCode = name ? name.charCodeAt(0) : 0
+  const safeName = name ?? 'Unknown'
+  const charCode = safeName.charCodeAt(0)
   return colorsArray[charCode % colorsArray.length]
 }
 
@@ -58,7 +59,19 @@ export default function Users() {
     try {
       const response = await api.get("/admin/users")
       console.log("Fetch users response:", response.data)
-      const userData = response.data.users || []
+      const userData = (response.data.users || []).map(user => ({
+        ...user,
+        id: user.id ?? 'Unknown',
+        name: user.name ?? 'Unknown',
+        email: user.email ?? 'Unknown',
+        isActive: user.isActive ?? false,
+        isBanned: user.isBanned ?? false,
+        isAdmin: user.isAdmin ?? false,
+        joinedDate: user.joinedDate ?? new Date().toISOString(),
+      }))
+      if (userData.some(user => !user.name || !user.email)) {
+        console.warn('Users with null name or email:', userData.filter(user => !user.name || !user.email))
+      }
       setUsers(userData)
       setFilteredUsers(userData)
     } catch (err) {
@@ -76,8 +89,8 @@ export default function Users() {
     if (searchQuery) {
       filtered = filtered.filter(
         (user) =>
-          user.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-          user.email?.toLowerCase().includes(searchQuery.toLowerCase()),
+          (user.name ?? '').toLowerCase().includes(searchQuery.toLowerCase()) ||
+          (user.email ?? '').toLowerCase().includes(searchQuery.toLowerCase()),
       )
     }
     if (statusFilter !== "all") {
@@ -282,7 +295,7 @@ export default function Users() {
                 value={statusFilter}
                 onChange={(e, value) => setStatusFilter(value)}
                 sx={{
-                  minWidth: "320px", // Adjusted to accommodate the new tab
+                  minWidth: "320px",
                   "& .MuiTab-root": {
                     color: colors.textSecondary,
                     fontSize: "0.9rem",
