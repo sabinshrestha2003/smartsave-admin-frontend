@@ -1,5 +1,5 @@
-import { useEffect, useMemo, useState } from "react"
-import { useNavigate } from "react-router-dom"
+import { useEffect, useMemo, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import {
   Container,
   Typography,
@@ -20,7 +20,7 @@ import {
   Divider,
   Tooltip,
   Button,
-} from "@mui/material"
+} from "@mui/material";
 import {
   Search as SearchIcon,
   Refresh as RefreshIcon,
@@ -30,211 +30,309 @@ import {
   ArrowBack as ArrowBackIcon,
   TrendingUp as TrendingUpIcon,
   Notifications as NotificationsIcon,
-} from "@mui/icons-material"
-import Skeleton from "react-loading-skeleton"
-import "react-loading-skeleton/dist/skeleton.css"
-import api from "../utils/api"
-import Slide from "@mui/material/Slide"
-import colors from "../styles/colors"
+} from "@mui/icons-material";
+import Skeleton from "react-loading-skeleton";
+import "react-loading-skeleton/dist/skeleton.css";
+import api from "../utils/api";
+import Slide from "@mui/material/Slide";
+import colors from "../styles/colors";
 
 const Dashboard = ({ isMinimized }) => {
-  const [searchQuery, setSearchQuery] = useState("")
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState("")
-  const [openSnackbar, setOpenSnackbar] = useState(false)
-  const [page, setPage] = useState(0)
-  const rowsPerPage = 5
-  const navigate = useNavigate()
+  const [searchQuery, setSearchQuery] = useState("");
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+  const [openSnackbar, setOpenSnackbar] = useState(false);
+  const [page, setPage] = useState(0);
+  const rowsPerPage = 5;
+  const navigate = useNavigate();
 
-  const [userStats, setUserStats] = useState({ total: 0, active: 0, inactive: 0, banned: 0 })
-  const [transactionStats, setTransactionStats] = useState({ daily: 0, weekly: 0, monthly: 0, totalAmount: "$0" })
-  const [recentActivity, setRecentActivity] = useState([])
+  const [userStats, setUserStats] = useState({
+    total: 0,
+    active: 0,
+    inactive: 0,
+    banned: 0,
+  });
+  const [transactionStats, setTransactionStats] = useState({
+    daily: 0,
+    weekly: 0,
+    monthly: 0,
+    totalAmount: "$0",
+  });
+  const [recentActivity, setRecentActivity] = useState([]);
 
   useEffect(() => {
-    let isMounted = true
+    let isMounted = true;
     const fetchData = async () => {
-      if (!isMounted) return
-      setLoading(true)
+      if (!isMounted) return;
+      setLoading(true);
       try {
-        const [usersResponse, transactionsResponse, overviewResponse, activitiesResponse] = await Promise.all([
-          api.get("/admin/users").catch((err) => ({ error: err, endpoint: "/admin/users" })),
-          api.get("/transactions/all").catch((err) => ({ error: err, endpoint: "/transactions/all" })),
-          api.get("/transactions/overview").catch((err) => ({ error: err, endpoint: "/transactions-overview" })),
-          api.get("/transactions/recent").catch((err) => ({ error: err, endpoint: "/transactions/recent" })),
-        ])
+        const [
+          usersResponse,
+          transactionsResponse,
+          overviewResponse,
+          activitiesResponse,
+        ] = await Promise.all([
+          api
+            .get("/admin/users")
+            .catch((err) => ({ error: err, endpoint: "/admin/users" })),
+          api
+            .get("/transactions/all")
+            .catch((err) => ({ error: err, endpoint: "/transactions/all" })),
+          api
+            .get("/transactions-overview")
+            .catch((err) => ({
+              error: err,
+              endpoint: "/transactions-overview",
+            })),
+          api
+            .get("/transactions/recent")
+            .catch((err) => ({ error: err, endpoint: "/transactions/recent" })),
+        ]);
 
-        if (!isMounted) return
+        if (!isMounted) return;
 
-        const errors = []
+        const errors = [];
         const safeErrorMessage = (err, endpoint) => {
-          if (!err) return "Unknown error"
+          if (!err) return "Unknown error";
           if (err.response) {
-            const status = err.response.status
-            if (status === 401) return "Unauthorized: Please log in"
-            if (status === 403) return "Forbidden: Admin access required"
-            return err.response.data?.error || err.message || `HTTP ${status} error`
+            const status = err.response.status;
+            if (status === 401) return "Unauthorized: Please log in";
+            if (status === 403) return "Forbidden: Admin access required";
+            return (
+              err.response.data?.error || err.message || `HTTP ${status} error`
+            );
           }
-          return err.message || `Network error (check backend logs for ${endpoint})`
-        }
+          return (
+            err.message || `Network error (check backend logs for ${endpoint})`
+          );
+        };
 
         if (usersResponse.error) {
-          errors.push(`Users (${usersResponse.endpoint}): ${safeErrorMessage(usersResponse.error, usersResponse.endpoint)}`)
-          console.error("Users error details:", usersResponse.error)
+          errors.push(
+            `Users (${usersResponse.endpoint}): ${safeErrorMessage(
+              usersResponse.error,
+              usersResponse.endpoint
+            )}`
+          );
+          console.error("Users error details:", usersResponse.error);
         }
         if (transactionsResponse.error) {
-          errors.push(`Transactions (${transactionsResponse.endpoint}): ${safeErrorMessage(transactionsResponse.error, transactionsResponse.endpoint)}`)
-          console.error("Transactions error details:", transactionsResponse.error)
+          errors.push(
+            `Transactions (${
+              transactionsResponse.endpoint
+            }): ${safeErrorMessage(
+              transactionsResponse.error,
+              transactionsResponse.endpoint
+            )}`
+          );
+          console.error(
+            "Transactions error details:",
+            transactionsResponse.error
+          );
         }
         if (overviewResponse.error) {
-          errors.push(`Overview (${overviewResponse.endpoint}): ${safeErrorMessage(overviewResponse.error, overviewResponse.endpoint)}`)
-          console.error("Overview error details:", JSON.stringify(overviewResponse.error, null, 2))
+          errors.push(
+            `Overview (${overviewResponse.endpoint}): ${safeErrorMessage(
+              overviewResponse.error,
+              overviewResponse.endpoint
+            )}`
+          );
+          console.error(
+            "Overview error details:",
+            JSON.stringify(overviewResponse.error, null, 2)
+          );
         }
         if (activitiesResponse.error) {
-          errors.push(`Activities (${activitiesResponse.endpoint}): ${safeErrorMessage(activitiesResponse.error, activitiesResponse.endpoint)}`)
-          console.error("Activities error details:", activitiesResponse.error)
+          errors.push(
+            `Activities (${activitiesResponse.endpoint}): ${safeErrorMessage(
+              activitiesResponse.error,
+              activitiesResponse.endpoint
+            )}`
+          );
+          console.error("Activities error details:", activitiesResponse.error);
         }
 
         if (errors.length > 0) {
-          console.error("API errors:", errors)
-          setError(`Partial data loaded. Issues: ${errors.join("; ")}`)
-          setOpenSnackbar(true)
-          if (errors.some((e) => e.includes("Unauthorized") || e.includes("Forbidden"))) {
-            localStorage.removeItem("token")
-            navigate("/")
-            return
+          console.error("API errors:", errors);
+          setError(`Partial data loaded. Issues: ${errors.join("; ")}`);
+          setOpenSnackbar(true);
+          if (
+            errors.some(
+              (e) => e.includes("Unauthorized") || e.includes("Forbidden")
+            )
+          ) {
+            localStorage.removeItem("token");
+            navigate("/");
+            return;
           }
         }
 
         if (!usersResponse.error) {
-          const { totalActiveUsers = 0, totalInactiveUsers = 0, totalBannedUsers = 0, users = [] } =
-            usersResponse.data || {}
+          const {
+            totalActiveUsers = 0,
+            totalInactiveUsers = 0,
+            totalBannedUsers = 0,
+            users = [],
+          } = usersResponse.data || {};
           setUserStats({
             total: users.length,
             active: totalActiveUsers,
             inactive: totalInactiveUsers,
             banned: totalBannedUsers,
-          })
+          });
         }
 
         if (!transactionsResponse.error) {
-          const transactions = transactionsResponse.data || []
+          const transactions = transactionsResponse.data || [];
           const dailyTransactions = transactions.filter(
-            (t) => t?.date && new Date(t.date).toDateString() === new Date().toDateString()
-          ).length
+            (t) =>
+              t?.date &&
+              new Date(t.date).toDateString() === new Date().toDateString()
+          ).length;
           const weeklyTransactions = transactions.filter((t) => {
-            const transactionDate = new Date(t?.date || "")
-            const now = new Date()
-            const oneWeekAgo = new Date(now.setDate(now.getDate() - 7))
-            return !isNaN(transactionDate) && transactionDate >= oneWeekAgo && transactionDate <= new Date()
-          }).length
+            const transactionDate = new Date(t?.date || "");
+            const now = new Date();
+            const oneWeekAgo = new Date(now.setDate(now.getDate() - 7));
+            return (
+              !isNaN(transactionDate) &&
+              transactionDate >= oneWeekAgo &&
+              transactionDate <= new Date()
+            );
+          }).length;
           const monthlyTransactions = transactions.filter((t) => {
-            const transactionDate = new Date(t?.date || "")
-            const now = new Date()
-            const oneMonthAgo = new Date(now.setMonth(now.getMonth() - 1))
-            return !isNaN(transactionDate) && transactionDate >= oneMonthAgo && transactionDate <= new Date()
-          }).length
+            const transactionDate = new Date(t?.date || "");
+            const now = new Date();
+            const oneMonthAgo = new Date(now.setMonth(now.getMonth() - 1));
+            return (
+              !isNaN(transactionDate) &&
+              transactionDate >= oneMonthAgo &&
+              transactionDate <= new Date()
+            );
+          }).length;
 
-          let totalSavings = 0
-          let totalExpenses = 0
+          let totalSavings = 0;
+          let totalExpenses = 0;
           if (!overviewResponse.error) {
-            totalSavings = overviewResponse.data?.totalSavings || 0
-            totalExpenses = overviewResponse.data?.totalExpenses || 0
+            totalSavings = overviewResponse.data?.totalSavings || 0;
+            totalExpenses = overviewResponse.data?.totalExpenses || 0;
           } else {
             totalSavings = transactions
               .filter((t) => t.type === "income")
-              .reduce((sum, t) => sum + t.amount, 0)
+              .reduce((sum, t) => sum + t.amount, 0);
             totalExpenses = transactions
               .filter((t) => t.type === "expense")
-              .reduce((sum, t) => sum + t.amount, 0)
+              .reduce((sum, t) => sum + t.amount, 0);
           }
 
-          const totalAmount = (totalSavings - totalExpenses).toLocaleString("en-US", {
-            style: "currency",
-            currency: "USD",
-          })
+          const totalAmount = (totalSavings - totalExpenses).toLocaleString(
+            "en-US",
+            {
+              style: "currency",
+              currency: "USD",
+            }
+          );
 
           setTransactionStats({
             daily: dailyTransactions,
             weekly: weeklyTransactions,
             monthly: monthlyTransactions,
             totalAmount,
-          })
+          });
         }
 
         if (!activitiesResponse.error) {
-          const { recentTransactions = [], newUserSignups = [], flaggedTransactions = [] } =
-            activitiesResponse.data || {}
+          const {
+            recentTransactions = [],
+            newUserSignups = [],
+            flaggedTransactions = [],
+          } = activitiesResponse.data || {};
 
           const formattedActivities = [
             ...recentTransactions.map((t) => ({
               id: t.id,
               type: "transaction",
-              user: `User ${t.user_id}`,
+              user: t.user_id != null ? `User ${t.user_id}` : "Unknown User",
               time: new Date(t.date).toLocaleString(),
-              amount: `$${Math.abs(t.amount)}`,
+              amount: t.amount != null ? `$${Math.abs(t.amount)}` : "$0",
               status: "completed",
             })),
             ...newUserSignups.map((u) => ({
               id: u.id,
               type: "signup",
-              user: u.name,
+              user: u.name ?? "Unknown User",
               time: new Date(u.joinedDate).toLocaleString(),
               status: "completed",
             })),
             ...flaggedTransactions.map((t) => ({
               id: t.id,
               type: "transaction",
-              user: `User ${t.user_id}`,
+              user: t.user_id != null ? `User ${t.user_id}` : "Unknown User",
               time: new Date(t.date).toLocaleString(),
-              amount: `$${Math.abs(t.amount)}`,
+              amount: t.amount != null ? `$${Math.abs(t.amount)}` : "$0",
               status: "pending",
             })),
-          ].sort((a, b) => new Date(b.time) - new Date(a.time))
+          ].sort((a, b) => new Date(b.time) - new Date(a.time));
 
-          setRecentActivity(formattedActivities)
+          setRecentActivity(formattedActivities);
         }
       } catch (err) {
-        console.error("Unexpected error:", err, "Error details:", JSON.stringify(err, null, 2))
-        setError(`Failed to load dashboard: ${err.message || "Unknown error (check backend logs)"}`)
-        setOpenSnackbar(true)
+        console.error(
+          "Unexpected error:",
+          err,
+          "Error details:",
+          JSON.stringify(err, null, 2)
+        );
+        setError(
+          `Failed to load dashboard: ${
+            err.message || "Unknown error (check backend logs)"
+          }`
+        );
+        setOpenSnackbar(true);
         if (err.message?.includes("401") || err.message?.includes("403")) {
-          localStorage.removeItem("token")
-          navigate("/")
+          localStorage.removeItem("token");
+          navigate("/");
         }
       } finally {
-        if (isMounted) setLoading(false)
+        if (isMounted) setLoading(false);
       }
-    }
-    fetchData()
+    };
+    fetchData();
     return () => {
-      isMounted = false
-    }
-  }, [navigate])
+      isMounted = false;
+    };
+  }, [navigate]);
 
   const filteredActivity = useMemo(() => {
-    return recentActivity.filter(
-      (activity) =>
-        activity.user.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        (activity.amount && activity.amount.toLowerCase().includes(searchQuery.toLowerCase()))
-    )
-  }, [recentActivity, searchQuery])
+    return recentActivity.filter((activity) => {
+      const user = activity.user ?? "";
+      const amount = activity.amount ?? "";
+      const query = searchQuery.toLowerCase();
+      return (
+        user.toLowerCase().includes(query) ||
+        (amount && amount.toLowerCase().includes(query))
+      );
+    });
+  }, [recentActivity, searchQuery]);
 
   const paginatedActivity = useMemo(() => {
-    return filteredActivity.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
-  }, [filteredActivity, page])
+    return filteredActivity.slice(
+      page * rowsPerPage,
+      page * rowsPerPage + rowsPerPage
+    );
+  }, [filteredActivity, page]);
 
   const handleCloseSnackbar = () => {
-    setOpenSnackbar(false)
-    setError("")
-  }
+    setOpenSnackbar(false);
+    setError("");
+  };
 
   const handleNextPage = () => {
-    if ((page + 1) * rowsPerPage < filteredActivity.length) setPage(page + 1)
-  }
+    if ((page + 1) * rowsPerPage < filteredActivity.length) setPage(page + 1);
+  };
 
   const handlePreviousPage = () => {
-    if (page > 0) setPage(page - 1)
-  }
+    if (page > 0) setPage(page - 1);
+  };
 
   if (loading) {
     return (
@@ -271,7 +369,7 @@ const Dashboard = ({ isMinimized }) => {
           </Card>
         </Container>
       </Box>
-    )
+    );
   }
 
   return (
@@ -288,7 +386,10 @@ const Dashboard = ({ isMinimized }) => {
           }}
         >
           <Box>
-            <Typography variant="h4" sx={{ fontWeight: "700", color: colors.text, mb: 1 }}>
+            <Typography
+              variant="h4"
+              sx={{ fontWeight: "700", color: colors.text, mb: 1 }}
+            >
               Admin Dashboard
             </Typography>
             <Typography variant="body1" sx={{ color: colors.textSecondary }}>
@@ -397,7 +498,14 @@ const Dashboard = ({ isMinimized }) => {
               onClick={() => navigate("/users")}
             >
               <Box sx={{ p: 3 }}>
-                <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", mb: 3 }}>
+                <Box
+                  sx={{
+                    display: "flex",
+                    justifyContent: "space-between",
+                    alignItems: "flex-start",
+                    mb: 3,
+                  }}
+                >
                   <Box
                     sx={{
                       bgcolor: colors.primaryLight,
@@ -426,15 +534,22 @@ const Dashboard = ({ isMinimized }) => {
                       fontWeight: 600,
                     }}
                   >
-                    <TrendingUpIcon sx={{ fontSize: "0.875rem" }} />+{Math.floor(Math.random() * 10) + 5}%
+                    <TrendingUpIcon sx={{ fontSize: "0.875rem" }} />+
+                    {Math.floor(Math.random() * 10) + 5}%
                   </Box>
                 </Box>
 
-                <Typography variant="h4" sx={{ fontWeight: "700", mb: 1, color: colors.text }}>
+                <Typography
+                  variant="h4"
+                  sx={{ fontWeight: "700", mb: 1, color: colors.text }}
+                >
                   {userStats.total.toLocaleString()}
                 </Typography>
 
-                <Typography variant="subtitle1" sx={{ color: colors.textSecondary, mb: 2 }}>
+                <Typography
+                  variant="subtitle1"
+                  sx={{ color: colors.textSecondary, mb: 2 }}
+                >
                   Total Users
                 </Typography>
 
@@ -443,10 +558,20 @@ const Dashboard = ({ isMinimized }) => {
                 <Grid container spacing={2}>
                   <Grid item xs={4}>
                     <Box sx={{ textAlign: "center" }}>
-                      <Typography variant="body2" sx={{ color: colors.income, fontWeight: 700, fontSize: "1rem" }}>
+                      <Typography
+                        variant="body2"
+                        sx={{
+                          color: colors.income,
+                          fontWeight: 700,
+                          fontSize: "1rem",
+                        }}
+                      >
                         {userStats.active.toLocaleString()}
                       </Typography>
-                      <Typography variant="caption" sx={{ color: colors.textSecondary }}>
+                      <Typography
+                        variant="caption"
+                        sx={{ color: colors.textSecondary }}
+                      >
                         Active
                       </Typography>
                     </Box>
@@ -455,21 +580,38 @@ const Dashboard = ({ isMinimized }) => {
                     <Box sx={{ textAlign: "center" }}>
                       <Typography
                         variant="body2"
-                        sx={{ color: colors.textSecondary, fontWeight: 700, fontSize: "1rem" }}
+                        sx={{
+                          color: colors.textSecondary,
+                          fontWeight: 700,
+                          fontSize: "1rem",
+                        }}
                       >
                         {userStats.inactive.toLocaleString()}
                       </Typography>
-                      <Typography variant="caption" sx={{ color: colors.textSecondary }}>
+                      <Typography
+                        variant="caption"
+                        sx={{ color: colors.textSecondary }}
+                      >
                         Inactive
                       </Typography>
                     </Box>
                   </Grid>
                   <Grid item xs={4}>
                     <Box sx={{ textAlign: "center" }}>
-                      <Typography variant="body2" sx={{ color: colors.expense, fontWeight: 700, fontSize: "1rem" }}>
+                      <Typography
+                        variant="body2"
+                        sx={{
+                          color: colors.expense,
+                          fontWeight: 700,
+                          fontSize: "1rem",
+                        }}
+                      >
                         {userStats.banned.toLocaleString()}
                       </Typography>
-                      <Typography variant="caption" sx={{ color: colors.textSecondary }}>
+                      <Typography
+                        variant="caption"
+                        sx={{ color: colors.textSecondary }}
+                      >
                         Banned
                       </Typography>
                     </Box>
@@ -498,7 +640,14 @@ const Dashboard = ({ isMinimized }) => {
               onClick={() => navigate("/transactions")}
             >
               <Box sx={{ p: 3 }}>
-                <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", mb: 3 }}>
+                <Box
+                  sx={{
+                    display: "flex",
+                    justifyContent: "space-between",
+                    alignItems: "flex-start",
+                    mb: 3,
+                  }}
+                >
                   <Box
                     sx={{
                       bgcolor: colors.tealLight,
@@ -527,15 +676,22 @@ const Dashboard = ({ isMinimized }) => {
                       fontWeight: 600,
                     }}
                   >
-                    <TrendingUpIcon sx={{ fontSize: "0.875rem" }} />+{Math.floor(Math.random() * 15) + 10}%
+                    <TrendingUpIcon sx={{ fontSize: "0.875rem" }} />+
+                    {Math.floor(Math.random() * 15) + 10}%
                   </Box>
                 </Box>
 
-                <Typography variant="h4" sx={{ fontWeight: "700", mb: 1, color: colors.text }}>
+                <Typography
+                  variant="h4"
+                  sx={{ fontWeight: "700", mb: 1, color: colors.text }}
+                >
                   {transactionStats.totalAmount}
                 </Typography>
 
-                <Typography variant="subtitle1" sx={{ color: colors.textSecondary, mb: 2 }}>
+                <Typography
+                  variant="subtitle1"
+                  sx={{ color: colors.textSecondary, mb: 2 }}
+                >
                   Total Transactions
                 </Typography>
 
@@ -544,30 +700,60 @@ const Dashboard = ({ isMinimized }) => {
                 <Grid container spacing={2}>
                   <Grid item xs={4}>
                     <Box sx={{ textAlign: "center" }}>
-                      <Typography variant="body2" sx={{ color: colors.primary, fontWeight: 700, fontSize: "1rem" }}>
+                      <Typography
+                        variant="body2"
+                        sx={{
+                          color: colors.primary,
+                          fontWeight: 700,
+                          fontSize: "1rem",
+                        }}
+                      >
                         {transactionStats.daily.toLocaleString()}
                       </Typography>
-                      <Typography variant="caption" sx={{ color: colors.textSecondary }}>
+                      <Typography
+                        variant="caption"
+                        sx={{ color: colors.textSecondary }}
+                      >
                         Daily
                       </Typography>
                     </Box>
                   </Grid>
                   <Grid item xs={4}>
                     <Box sx={{ textAlign: "center" }}>
-                      <Typography variant="body2" sx={{ color: colors.primary, fontWeight: 700, fontSize: "1rem" }}>
+                      <Typography
+                        variant="body2"
+                        sx={{
+                          color: colors.primary,
+                          fontWeight: 700,
+                          fontSize: "1rem",
+                        }}
+                      >
                         {transactionStats.weekly.toLocaleString()}
                       </Typography>
-                      <Typography variant="caption" sx={{ color: colors.textSecondary }}>
+                      <Typography
+                        variant="caption"
+                        sx={{ color: colors.textSecondary }}
+                      >
                         Weekly
                       </Typography>
                     </Box>
                   </Grid>
                   <Grid item xs={4}>
                     <Box sx={{ textAlign: "center" }}>
-                      <Typography variant="body2" sx={{ color: colors.primary, fontWeight: 700, fontSize: "1rem" }}>
+                      <Typography
+                        variant="body2"
+                        sx={{
+                          color: colors.primary,
+                          fontWeight: 700,
+                          fontSize: "1rem",
+                        }}
+                      >
                         {transactionStats.monthly.toLocaleString()}
                       </Typography>
-                      <Typography variant="caption" sx={{ color: colors.textSecondary }}>
+                      <Typography
+                        variant="caption"
+                        sx={{ color: colors.textSecondary }}
+                      >
                         Monthly
                       </Typography>
                     </Box>
@@ -588,10 +774,16 @@ const Dashboard = ({ isMinimized }) => {
           }}
         >
           <Box sx={{ p: 3, borderBottom: `1px solid ${colors.border}` }}>
-            <Typography variant="h6" sx={{ fontWeight: "600", color: colors.text }}>
+            <Typography
+              variant="h6"
+              sx={{ fontWeight: "600", color: colors.text }}
+            >
               Recent Activity
             </Typography>
-            <Typography variant="body2" sx={{ color: colors.textSecondary, mt: 0.5 }}>
+            <Typography
+              variant="body2"
+              sx={{ color: colors.textSecondary, mt: 0.5 }}
+            >
               Latest transactions and user signups
             </Typography>
           </Box>
@@ -665,7 +857,11 @@ const Dashboard = ({ isMinimized }) => {
               <TableBody>
                 {paginatedActivity.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={5} align="center" sx={{ py: 4, color: colors.textSecondary }}>
+                    <TableCell
+                      colSpan={5}
+                      align="center"
+                      sx={{ py: 4, color: colors.textSecondary }}
+                    >
                       No activities found matching your search
                     </TableCell>
                   </TableRow>
@@ -696,8 +892,14 @@ const Dashboard = ({ isMinimized }) => {
                             width: 36,
                             height: 36,
                             borderRadius: "10px",
-                            bgcolor: activity.type === "signup" ? colors.primaryLight : colors.tealLight,
-                            color: activity.type === "signup" ? colors.primary : colors.teal,
+                            bgcolor:
+                              activity.type === "signup"
+                                ? colors.primaryLight
+                                : colors.tealLight,
+                            color:
+                              activity.type === "signup"
+                                ? colors.primary
+                                : colors.teal,
                           }}
                         >
                           {activity.type === "signup" ? (
@@ -728,7 +930,9 @@ const Dashboard = ({ isMinimized }) => {
                           px: 3,
                         }}
                       >
-                        {activity.type === "signup" ? "New user registration" : `Transaction of ${activity.amount}`}
+                        {activity.type === "signup"
+                          ? "New user registration"
+                          : `Transaction of ${activity.amount}`}
                       </TableCell>
                       <TableCell
                         sx={{
@@ -755,8 +959,14 @@ const Dashboard = ({ isMinimized }) => {
                           sx={{
                             fontSize: "0.75rem",
                             height: "24px",
-                            backgroundColor: activity.status === "completed" ? colors.incomeLight : colors.goldLight,
-                            color: activity.status === "completed" ? colors.income : colors.gold,
+                            backgroundColor:
+                              activity.status === "completed"
+                                ? colors.incomeLight
+                                : colors.goldLight,
+                            color:
+                              activity.status === "completed"
+                                ? colors.income
+                                : colors.gold,
                             fontWeight: "600",
                             borderRadius: "6px",
                           }}
@@ -779,7 +989,8 @@ const Dashboard = ({ isMinimized }) => {
             }}
           >
             <Box sx={{ color: colors.textSecondary, fontSize: "0.875rem" }}>
-              Showing {paginatedActivity.length} of {filteredActivity.length} activities
+              Showing {paginatedActivity.length} of {filteredActivity.length}{" "}
+              activities
             </Box>
             <Box sx={{ display: "flex", gap: 1 }}>
               <Button
@@ -854,7 +1065,7 @@ const Dashboard = ({ isMinimized }) => {
         </Snackbar>
       </Container>
     </Box>
-  )
-}
+  );
+};
 
-export default Dashboard
+export default Dashboard;
