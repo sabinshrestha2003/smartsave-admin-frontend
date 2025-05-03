@@ -79,10 +79,10 @@ const Dashboard = ({ isMinimized }) => {
             .get("/transactions/all")
             .catch((err) => ({ error: err, endpoint: "/transactions/all" })),
           api
-            .get("/transactions/overview")
+            .get("/transactions/overview") // Fixed: Changed from "/transactions-overview" to "/transactions/overview" to match backend endpoint
             .catch((err) => ({
               error: err,
-              endpoint: "/transactions/overview",
+              endpoint: "/transactions/overview", // Fixed: Updated endpoint name for accurate error reporting
             })),
           api
             .get("/transactions/recent")
