@@ -29,7 +29,6 @@ import {
   ArrowForward as ArrowForwardIcon,
   ArrowBack as ArrowBackIcon,
   TrendingUp as TrendingUpIcon,
-  Notifications as NotificationsIcon,
 } from "@mui/icons-material";
 import Skeleton from "react-loading-skeleton";
 import "react-loading-skeleton/dist/skeleton.css";
@@ -79,10 +78,10 @@ const Dashboard = ({ isMinimized }) => {
             .get("/transactions/all")
             .catch((err) => ({ error: err, endpoint: "/transactions/all" })),
           api
-            .get("/transactions/overview") // Fixed: Changed from "/transactions-overview" to "/transactions/overview" to match backend endpoint
+            .get("/transactions/overview")
             .catch((err) => ({
               error: err,
-              endpoint: "/transactions/overview", // Fixed: Updated endpoint name for accurate error reporting
+              endpoint: "/transactions-overview",
             })),
           api
             .get("/transactions/recent")
@@ -445,34 +444,6 @@ const Dashboard = ({ isMinimized }) => {
                 }}
               >
                 <RefreshIcon />
-              </IconButton>
-            </Tooltip>
-
-            <Tooltip title="Notifications">
-              <IconButton
-                sx={{
-                  color: colors.gold,
-                  bgcolor: colors.goldLight,
-                  width: 40,
-                  height: 40,
-                  borderRadius: "10px",
-                  "&:hover": { bgcolor: colors.goldLight, opacity: 0.9 },
-                  position: "relative",
-                }}
-              >
-                <NotificationsIcon />
-                <Box
-                  sx={{
-                    position: "absolute",
-                    top: 8,
-                    right: 8,
-                    width: 8,
-                    height: 8,
-                    borderRadius: "50%",
-                    bgcolor: colors.expense,
-                    border: `2px solid ${colors.goldLight}`,
-                  }}
-                />
               </IconButton>
             </Tooltip>
           </Box>
@@ -992,7 +963,7 @@ const Dashboard = ({ isMinimized }) => {
               Showing {paginatedActivity.length} of {filteredActivity.length}{" "}
               activities
             </Box>
-            <Box sx={{ display: "flex", gap: 1 }}>
+            <Box sx={{ display: "(PSR) flex", gap: 1 }}>
               <Button
                 variant="outlined"
                 startIcon={<ArrowBackIcon />}
