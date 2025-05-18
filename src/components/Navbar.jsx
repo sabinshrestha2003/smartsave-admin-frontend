@@ -103,7 +103,7 @@ const Navbar = ({ isMinimized, setIsMinimized }) => {
   );
 
   const NavItems = () => (
-    <>
+    <Box sx={{ display: 'flex', flexDirection: 'column', height: '100vh' }}>
       <Box
         sx={{
           p: 2,
@@ -155,7 +155,7 @@ const Navbar = ({ isMinimized, setIsMinimized }) => {
 
       <Divider sx={{ bgcolor: colors.border, mb: 2 }} />
 
-      <Box sx={{ px: 2, mb: 3, flexGrow: 1, overflowY: 'auto' }}>
+      <Box sx={{ px: 2, flexGrow: 1, overflowY: 'auto', pb: '80px' }}>
         {!isMinimized && (
           <Typography
             variant="caption"
@@ -215,6 +215,7 @@ const Navbar = ({ isMinimized, setIsMinimized }) => {
             path="/send-message"
             isActive={location.pathname === '/send-message'}
           />
+          {console.log('Send Message NavItem rendered')}
         </List>
       </Box>
 
@@ -227,6 +228,7 @@ const Navbar = ({ isMinimized, setIsMinimized }) => {
           p: 2,
           borderTop: `1px solid ${colors.border}`,
           bgcolor: colors.background,
+          height: '60px',
         }}
       >
         <List>
@@ -238,7 +240,7 @@ const Navbar = ({ isMinimized, setIsMinimized }) => {
           />
         </List>
       </Box>
-    </>
+    </Box>
   );
 
   if (isMobile) {
