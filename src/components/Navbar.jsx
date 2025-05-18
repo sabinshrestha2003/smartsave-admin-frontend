@@ -155,7 +155,7 @@ const Navbar = ({ isMinimized, setIsMinimized }) => {
 
       <Divider sx={{ bgcolor: colors.border, mb: 2 }} />
 
-      <Box sx={{ px: 2, mb: 3 }}>
+      <Box sx={{ px: 2, mb: 3, flexGrow: 1, overflowY: 'auto' }}>
         {!isMinimized && (
           <Typography
             variant="caption"
@@ -297,8 +297,6 @@ const Navbar = ({ isMinimized, setIsMinimized }) => {
         zIndex: 1200,
         display: { xs: 'none', md: 'block' },
         overflowY: 'auto',
-        scrollbarWidth: 'none',
-        '&::-webkit-scrollbar': { display: 'none' },
         transition: 'width 0.3s ease',
         boxShadow: `2px 0 8px ${colors.shadow}`,
       }}
